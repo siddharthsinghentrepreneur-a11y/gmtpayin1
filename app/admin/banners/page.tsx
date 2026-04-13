@@ -16,6 +16,7 @@ export default function AdminBannersPage() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/banners")
@@ -31,7 +32,9 @@ export default function AdminBannersPage() {
           );
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        setError("Could not load banners from server. Showing defaults.");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -78,6 +81,7 @@ export default function AdminBannersPage() {
 
   async function handleReset() {
     setSaving(true);
+    setError("");
     try {
       const res = await fetch("/api/admin/banners", {
         method: "POST",
@@ -90,13 +94,19 @@ export default function AdminBannersPage() {
         setBanners(DEFAULT_HOME_BANNERS);
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to reset banners. Database may be unreachable.");
       }
-    } catch {}
+    } catch {
+      setError("Failed to reset banners. Database may be unreachable.");
+    }
     setSaving(false);
   }
 
   async function handleSave() {
     setSaving(true);
+    setError("");
     try {
       const res = await fetch("/api/admin/banners", {
         method: "POST",
@@ -108,8 +118,13 @@ export default function AdminBannersPage() {
       if (res.ok) {
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to save banners. Database may be unreachable.");
       }
-    } catch {}
+    } catch {
+      setError("Failed to save banners. Database may be unreachable.");
+    }
     setSaving(false);
   }
 
@@ -123,6 +138,14 @@ export default function AdminBannersPage() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-medium text-red-700">
+          <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          {error}
+        </div>
+      )}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Home Page Banners</h1>
