@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isAdminPhone, saveAdminSession, saveUserSession } from "@/lib/client-auth";
 
-export default function RegisterPage() {
+function RegisterClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phone, setPhone] = useState("");
@@ -251,5 +251,13 @@ export default function RegisterPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50">Loading...</div>}>
+      <RegisterClient />
+    </Suspense>
   );
 }
