@@ -18,8 +18,6 @@ import { useRouter } from "next/navigation";
 import { getCurrentUserId, updateUserSession } from "@/lib/client-auth";
 import {
   DEFAULT_HOME_BANNERS,
-  HOME_BANNER_EVENT,
-  readHomeBanners,
   type HomeBannerSlide,
 } from "@/lib/home-banners";
 import {
@@ -114,25 +112,20 @@ export default function DashboardPage() {
   }, [router]);
 
   useEffect(() => {
-    const syncSlides = () => setSlides(readHomeBanners());
-
-    syncSlides();
-
-    const handleStorage = (event: StorageEvent) => {
-      if (!event.key || event.key === "gmtpay.homeBanners") {
-        syncSlides();
-      }
-    };
-
-    const handleBannerUpdate = () => syncSlides();
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(HOME_BANNER_EVENT, handleBannerUpdate);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(HOME_BANNER_EVENT, handleBannerUpdate);
-    };
+    fetch("/api/admin/banners")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.banners?.length) {
+          setSlides(
+            data.banners.map((b: { id: string; imageUrl: string }, i: number) => ({
+              id: b.id,
+              name: `Banner ${i + 1}`,
+              src: b.imageUrl,
+            })),
+          );
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

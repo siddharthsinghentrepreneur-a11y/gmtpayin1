@@ -9,20 +9,30 @@ import {
   MdRefresh,
   MdSave,
 } from "react-icons/md";
-import {
-  DEFAULT_HOME_BANNERS,
-  readHomeBanners,
-  resetHomeBanners,
-  writeHomeBanners,
-  type HomeBannerSlide,
-} from "@/lib/home-banners";
+import { DEFAULT_HOME_BANNERS, type HomeBannerSlide } from "@/lib/home-banners";
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<HomeBannerSlide[]>(DEFAULT_HOME_BANNERS);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setBanners(readHomeBanners());
+    fetch("/api/admin/banners")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.banners?.length) {
+          setBanners(
+            data.banners.map((b: { id: string; imageUrl: string }, i: number) => ({
+              id: b.id,
+              name: `Banner ${i + 1}`,
+              src: b.imageUrl,
+            })),
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   function handleFileChange(index: number, event: ChangeEvent<HTMLInputElement>) {
@@ -66,17 +76,49 @@ export default function AdminBannersPage() {
     setSaved(false);
   }
 
-  function handleReset() {
-    resetHomeBanners();
-    setBanners(DEFAULT_HOME_BANNERS);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  async function handleReset() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/banners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          banners: DEFAULT_HOME_BANNERS.map((b) => ({ imageUrl: b.src })),
+        }),
+      });
+      if (res.ok) {
+        setBanners(DEFAULT_HOME_BANNERS);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      }
+    } catch {}
+    setSaving(false);
   }
 
-  function handleSave() {
-    writeHomeBanners(banners);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/banners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          banners: banners.map((b) => ({ imageUrl: b.src })),
+        }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      }
+    } catch {}
+    setSaving(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+      </div>
+    );
   }
 
   return (
@@ -100,14 +142,15 @@ export default function AdminBannersPage() {
           <button
             type="button"
             onClick={handleSave}
+            disabled={saving}
             className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-lg transition ${
               saved
                 ? "bg-emerald-600 shadow-emerald-600/25"
                 : "bg-indigo-600 shadow-indigo-600/25 hover:bg-indigo-700"
-            }`}
+            } disabled:opacity-50`}
           >
             {saved ? <MdCheckCircle className="h-4 w-4" /> : <MdSave className="h-4 w-4" />}
-            {saved ? "Saved" : "Save Banners"}
+            {saving ? "Saving..." : saved ? "Saved" : "Save Banners"}
           </button>
         </div>
       </div>
