@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -84,9 +85,7 @@ export default function Home() {
       <div className="flex-1 rounded-t-[2rem] bg-white px-6 pt-8 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
         {/* Welcome icon */}
         <div className="mb-7 flex items-center justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-xl font-black text-white shadow-lg shadow-blue-600/30">
-            G
-          </div>
+          <BrandLogo size={72} imageClassName="rounded-2xl shadow-lg shadow-blue-600/20" />
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>

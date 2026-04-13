@@ -14,8 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GmtPay",
-  description: "GmtPay - Payment Platform",
+  title: "GMTPay",
+  description: "GMTPay - Payment Platform",
+  icons: {
+    icon: "/gmtpayicon.jpeg",
+    shortcut: "/gmtpayicon.jpeg",
+    apple: "/gmtpayicon.jpeg",
+  },
 };
 
 export default function RootLayout({

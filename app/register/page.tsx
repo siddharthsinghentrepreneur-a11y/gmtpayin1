@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
 import { FormEvent, Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -119,6 +120,10 @@ function RegisterClient() {
 
       {/* Form section */}
       <div className="flex-1 rounded-t-[2rem] bg-white px-6 pt-8 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
+        <div className="mb-7 flex items-center justify-center">
+          <BrandLogo size={72} imageClassName="rounded-2xl shadow-lg shadow-blue-600/20" />
+        </div>
+
         {/* Steps indicator */}
         <div className="mb-7 flex items-center justify-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white shadow-md shadow-blue-600/30">1</div>

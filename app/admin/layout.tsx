@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
 import {
   clearAdminSession,
   clearUserSession,
@@ -127,11 +128,9 @@ export default function AdminLayout({
         {/* Logo */}
         <div className="flex h-[68px] items-center justify-between px-5 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-black text-white shadow-lg shadow-indigo-500/20">
-              G
-            </div>
+            <BrandLogo size={40} imageClassName="rounded-xl shadow-lg shadow-slate-950/20" />
             <div>
-              <span className="text-[15px] font-bold text-white tracking-tight">GmtPay</span>
+              <span className="text-[15px] font-bold text-white tracking-tight">GMTPay</span>
               <span className="ml-1.5 rounded bg-indigo-500/20 px-1.5 py-0.5 text-[9px] font-bold text-indigo-300 uppercase tracking-wider">Admin</span>
             </div>
           </div>

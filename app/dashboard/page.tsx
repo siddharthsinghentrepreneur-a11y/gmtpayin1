@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { GiPayMoney, GiReceiveMoney } from "react-icons/gi";
@@ -230,9 +231,7 @@ export default function DashboardPage() {
 
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-amber-200 to-amber-100 text-xl ring-[3px] ring-white/30 shadow-md">
-              🤓
-            </div>
+            <BrandLogo size={44} imageClassName="rounded-full ring-[3px] ring-white/30 shadow-md" />
             <div>
               <p className="text-base font-bold text-white tracking-tight">
                 UID: {userUid}

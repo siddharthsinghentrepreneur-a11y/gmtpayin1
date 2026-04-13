@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { clearUserSession, getCurrentUserId, getUserSession, updateUserSession } from "@/lib/client-auth";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -78,9 +79,12 @@ export default function MyPage() {
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -left-8 bottom-4 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
 
-        <h1 className="relative text-center text-lg font-bold tracking-wide text-white">
-          My Profile
-        </h1>
+        <div className="relative flex items-center justify-center gap-3">
+          <BrandLogo size={32} imageClassName="rounded-lg shadow-md shadow-black/10" />
+          <h1 className="text-lg font-bold tracking-wide text-white">
+            My Profile
+          </h1>
+        </div>
 
         {/* Profile Row */}
         <div className="relative mt-6 flex items-center gap-4">
