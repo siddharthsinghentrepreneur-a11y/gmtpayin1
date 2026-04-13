@@ -53,11 +53,13 @@ export async function GET(
       return Response.json({ error: "User not found" }, { status: 404 });
     }
 
+    const existingUser = user;
+
     // Auto-generate UID and referral code for accounts created before these features
-    if (!user.uid || !user.referralCode) {
+    if (!existingUser.uid || !existingUser.referralCode) {
       user = await withDatabaseRetry(async (db) => {
-        const uid = user.uid ?? await generateUniqueUserUid(db);
-        const referralCode = user.referralCode ?? await generateUniqueReferralCode(db);
+        const uid = existingUser.uid ?? await generateUniqueUserUid(db);
+        const referralCode = existingUser.referralCode ?? await generateUniqueReferralCode(db);
 
         return db.user.update({
           where: { id },
