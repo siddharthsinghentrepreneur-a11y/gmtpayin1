@@ -221,21 +221,3 @@ model ReferralCommission {
 
   @@map("referral_commissions")
 }
-
-// ─── Referral Commissions ───────────────────────────────────────────
-model ReferralCommission {
-  id               String @id @default(cuid())
-  referrerId       String
-  fromUserId       String
-  orderId          String
-  depositAmount    Float
-  commissionRate   Float  @default(0.005)
-  commissionAmount Float
-
-  referrer User @relation("ReferrerCommissions", fields: [referrerId], references: [id], onDelete: Cascade)
-  fromUser User @relation("FromUserCommissions", fields: [fromUserId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@map("referral_commissions")
-}
