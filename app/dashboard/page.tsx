@@ -111,20 +111,8 @@ export default function DashboardPage() {
   }, [router]);
 
   useEffect(() => {
-    fetch("/api/admin/banners")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.banners?.length) {
-          setSlides(
-            data.banners.map((b: { id: string; imageUrl: string }, i: number) => ({
-              id: b.id,
-              name: `Banner ${i + 1}`,
-              src: b.imageUrl,
-            })),
-          );
-        }
-      })
-      .catch(() => {});
+    // Banners are served from static files in public/banners/
+    setSlides(DEFAULT_HOME_BANNERS);
   }, []);
 
   useEffect(() => {

@@ -8,9 +8,9 @@ export const HOME_BANNER_STORAGE_KEY = "gmtpay.homeBanners";
 export const HOME_BANNER_EVENT = "gmtpay:home-banners-updated";
 
 export const DEFAULT_HOME_BANNERS: HomeBannerSlide[] = [
-  { id: "banner-1", name: "Banner 1", src: "/banners/banner1.svg" },
-  { id: "banner-2", name: "Banner 2", src: "/banners/banner2.svg" },
-  { id: "banner-3", name: "Banner 3", src: "/banners/banner3.svg" },
+  { id: "banner-1", name: "Banner 1", src: "/banners/banner1.png" },
+  { id: "banner-2", name: "Banner 2", src: "/banners/banner2.png" },
+  { id: "banner-3", name: "Banner 3", src: "/banners/banner3.png" },
 ];
 
 function normalizeSlides(value: unknown): HomeBannerSlide[] {
