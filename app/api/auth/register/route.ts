@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
     const password = typeof body.password === "string" ? body.password.trim() : "";
     const referralCode = normalizeReferralCode(typeof body.referralCode === "string" ? body.referralCode : "");
 
-    if (!phone || !password) {
+    if (!phone || !password || !referralCode) {
       return Response.json(
-        { error: "Phone number and password are required" },
+        { error: "Phone number, password, and invitation code are required" },
         { status: 400 }
       );
     }
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (referralCode && !isValidReferralCode(referralCode)) {
+    if (!isValidReferralCode(referralCode)) {
       return Response.json(
-        { error: "Enter a valid 5-character referral code" },
+        { error: "Enter a valid 5-character invitation code" },
         { status: 400 }
       );
     }
@@ -57,18 +57,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const referringUser = referralCode
-      ? await withDatabaseRetry((db) =>
-          db.user.findUnique({
-            where: { referralCode },
-            select: { id: true },
-          }),
-        )
-      : null;
+    const referringUser = await withDatabaseRetry((db) =>
+      db.user.findUnique({
+        where: { referralCode },
+        select: { id: true },
+      }),
+    );
 
-    if (referralCode && !referringUser) {
+    if (!referringUser) {
       return Response.json(
-        { error: "Referral code is invalid" },
+        { error: "Invitation code is invalid" },
         { status: 400 }
       );
     }

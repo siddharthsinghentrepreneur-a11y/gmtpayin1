@@ -8,6 +8,7 @@ import { isAdminPhone, saveAdminSession, saveUserSession } from "@/lib/client-au
 function RegisterClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const linkedReferralCode = searchParams.get("ref");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,15 +19,21 @@ function RegisterClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const ref = searchParams.get("ref");
-    if (ref) setReferralCode(ref);
-  }, [searchParams]);
+    if (linkedReferralCode) {
+      setReferralCode(linkedReferralCode.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 5));
+    }
+  }, [linkedReferralCode]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+
+    if (!referralCode) {
+      setError("Invitation code is required");
       return;
     }
 
@@ -201,15 +208,22 @@ function RegisterClient() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                 </svg>
               </span>
-              Invite code <span className="font-normal text-slate-400">(optional)</span>
+              Invitation code
             </label>
             <input
               type="text"
               value={referralCode}
               onChange={(event) => setReferralCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 5))}
-              placeholder="Enter invite code"
+              placeholder={linkedReferralCode ? "Invitation code added from referral link" : "Enter invitation code"}
+              readOnly={Boolean(linkedReferralCode)}
+              required
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold uppercase tracking-widest text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
             />
+            <p className="mt-2 text-xs text-slate-500">
+              {linkedReferralCode
+                ? "This invitation code came from your referral link and cannot be changed."
+                : "An invitation code is required to create your account."}
+            </p>
           </div>
 
           {/* Error */}
