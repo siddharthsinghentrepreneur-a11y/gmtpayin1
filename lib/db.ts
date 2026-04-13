@@ -50,8 +50,30 @@ function isRetryableDatabaseError(error: unknown) {
   );
 }
 
+function isDatabaseConfigurationError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const code = "code" in error ? String(error.code ?? "") : "";
+  const message = `${error.message} ${error.cause instanceof Error ? error.cause.message : ""}`.toLowerCase();
+
+  return (
+    code === "ERR_INVALID_URL" ||
+    code === "ENOENT" ||
+    message.includes("database_url is not configured") ||
+    message.includes("invalid url") ||
+    message.includes("no such file or directory") ||
+    message.includes("aws-rds-global-bundle.pem")
+  );
+}
+
 export function isDatabaseUnavailableError(error: unknown) {
   return isRetryableDatabaseError(error);
+}
+
+export function isDatabaseConfigurationIssue(error: unknown) {
+  return isDatabaseConfigurationError(error);
 }
 
 async function resetPrismaClient() {

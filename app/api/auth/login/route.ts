@@ -1,4 +1,4 @@
-import { isDatabaseUnavailableError, withDatabaseRetry } from "@/lib/db";
+import { isDatabaseConfigurationIssue, isDatabaseUnavailableError, withDatabaseRetry } from "@/lib/db";
 import { isValidPhone, normalizePhone, verifyPassword } from "@/lib/auth";
 import { generateUniqueReferralCode } from "@/lib/referral-code";
 import { generateUniqueUserUid } from "@/lib/user-uid";
@@ -106,6 +106,13 @@ export async function POST(request: NextRequest) {
       return Response.json(
         { error: "Server database is currently unreachable. Please try again in a few minutes." },
         { status: 503 },
+      );
+    }
+
+    if (isDatabaseConfigurationIssue(err)) {
+      return Response.json(
+        { error: "Server database is not configured correctly. Please contact support." },
+        { status: 500 },
       );
     }
 
