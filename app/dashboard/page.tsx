@@ -35,6 +35,13 @@ export default function DashboardPage() {
   const [mobikwikInput, setMobikwikInput] = useState("");
   const [showMobikwikInput, setShowMobikwikInput] = useState(false);
   const [savingMobikwik, setSavingMobikwik] = useState(false);
+  // OTP flow states
+  const [mobikwikOtpStep, setMobikwikOtpStep] = useState<"phone" | "otp">("phone");
+  const [mobikwikOtp, setMobikwikOtp] = useState("");
+  const [mobikwikOtpToken, setMobikwikOtpToken] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [mobikwikError, setMobikwikError] = useState("");
   const [userUid, setUserUid] = useState("-----");
   const [balance, setBalance] = useState(0);
   const [todayBuy, setTodayBuy] = useState({ inTransaction: 0, success: 0 });
@@ -482,67 +489,196 @@ export default function DashboardPage() {
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white shadow-md shadow-purple-300/30">
                       <MdAccountBalanceWallet className="h-5 w-5" />
                     </div>
-                    <p className="text-[15px] font-bold text-slate-900">Link MobiKwik Wallet</p>
+                    <div>
+                      <p className="text-[15px] font-bold text-slate-900">Link MobiKwik Wallet</p>
+                      <p className="text-[11px] text-zinc-500">
+                        {mobikwikOtpStep === "phone" ? "Enter your MobiKwik number" : "Enter OTP sent to your number"}
+                      </p>
+                    </div>
                   </div>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    value={mobikwikInput}
-                    onChange={(e) => setMobikwikInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    placeholder="Enter MobiKwik number"
-                    className="w-full rounded-xl border border-purple-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-zinc-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 font-mono tracking-wide"
-                  />
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => { setShowMobikwikInput(false); setMobikwikInput(""); }}
-                      className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      disabled={mobikwikInput.length !== 10 || savingMobikwik}
-                      onClick={async () => {
-                        const userId = getCurrentUserId();
-                        if (!userId || mobikwikInput.length !== 10) return;
-                        setSavingMobikwik(true);
-                        try {
-                          const res = await fetch(`/api/users/${userId}/bank`);
-                          const data = await res.json();
-                          if (data.bank) {
-                            await fetch(`/api/users/${userId}/bank`, {
+
+                  {mobikwikError && (
+                    <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2">
+                      <p className="text-xs text-red-600 font-medium">{mobikwikError}</p>
+                    </div>
+                  )}
+
+                  {mobikwikOtpStep === "phone" ? (
+                    <>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={mobikwikInput}
+                        onChange={(e) => { setMobikwikInput(e.target.value.replace(/\D/g, "").slice(0, 10)); setMobikwikError(""); }}
+                        placeholder="Enter 10-digit MobiKwik number"
+                        className="w-full rounded-xl border border-purple-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-zinc-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 font-mono tracking-wide"
+                      />
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setShowMobikwikInput(false); setMobikwikInput(""); setMobikwikError(""); setMobikwikOtpStep("phone"); }}
+                          className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={mobikwikInput.length !== 10 || sendingOtp}
+                          onClick={async () => {
+                            if (mobikwikInput.length !== 10) return;
+                            setSendingOtp(true);
+                            setMobikwikError("");
+                            try {
+                              const res = await fetch("/api/mobikwik-otp", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "send", phone: mobikwikInput }),
+                              });
+                              const data = await res.json();
+                              if (!res.ok) {
+                                setMobikwikError(data.error || "Failed to send OTP");
+                                return;
+                              }
+                              setMobikwikOtpToken(data.otpToken);
+                              setMobikwikOtpStep("otp");
+                              // Show OTP for testing (remove when SMS API is integrated)
+                              if (data._devOtp) {
+                                alert(`Your OTP is: ${data._devOtp}`);
+                              }
+                            } catch {
+                              setMobikwikError("Network error. Try again.");
+                            } finally {
+                              setSendingOtp(false);
+                            }
+                          }}
+                          className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white transition ${
+                            mobikwikInput.length === 10 && !sendingOtp
+                              ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 shadow-lg shadow-purple-400/30 hover:shadow-xl active:scale-[0.98]"
+                              : "bg-slate-300 cursor-not-allowed"
+                          }`}
+                        >
+                          {sendingOtp ? "Sending..." : "Send OTP"}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-2 rounded-lg bg-purple-100/60 px-3 py-2">
+                        <p className="text-xs text-purple-700">OTP sent to <span className="font-bold">{mobikwikInput}</span></p>
+                      </div>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        value={mobikwikOtp}
+                        onChange={(e) => { setMobikwikOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setMobikwikError(""); }}
+                        placeholder="Enter 6-digit OTP"
+                        className="w-full rounded-xl border border-purple-200 bg-white px-4 py-3 text-center text-lg font-bold text-slate-900 outline-none transition placeholder:text-zinc-400 placeholder:text-sm placeholder:font-medium focus:border-purple-400 focus:ring-2 focus:ring-purple-100 font-mono tracking-[0.5em]"
+                        maxLength={6}
+                        autoFocus
+                      />
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setMobikwikOtpStep("phone"); setMobikwikOtp(""); setMobikwikError(""); }}
+                          className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                        >
+                          Back
+                        </button>
+                        <button
+                          type="button"
+                          disabled={mobikwikOtp.length !== 6 || verifyingOtp}
+                          onClick={async () => {
+                            if (mobikwikOtp.length !== 6) return;
+                            setVerifyingOtp(true);
+                            setMobikwikError("");
+                            try {
+                              // Step 1: Verify OTP
+                              const verifyRes = await fetch("/api/mobikwik-otp", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ action: "verify", phone: mobikwikInput, otp: mobikwikOtp, otpToken: mobikwikOtpToken }),
+                              });
+                              const verifyData = await verifyRes.json();
+                              if (!verifyRes.ok) {
+                                setMobikwikError(verifyData.error || "Invalid OTP");
+                                return;
+                              }
+                              // Step 2: Save MobiKwik number to DB
+                              const userId = getCurrentUserId();
+                              if (userId) {
+                                const bankRes = await fetch(`/api/users/${userId}/bank`);
+                                const bankData = await bankRes.json();
+                                if (bankData.bank) {
+                                  await fetch(`/api/users/${userId}/bank`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      bankName: bankData.bank.bankName,
+                                      beneficiary: bankData.bank.beneficiary,
+                                      accountLast4: bankData.bank.accountLast4,
+                                      fullAccount: bankData.bank.fullAccount,
+                                      ifsc: bankData.bank.ifsc,
+                                      upiId: bankData.bank.upiId || "",
+                                      mobikwik: mobikwikInput,
+                                    }),
+                                  });
+                                }
+                              }
+                              setMobikwikNumber(mobikwikInput);
+                              setShowMobikwikInput(false);
+                              setMobikwikInput("");
+                              setMobikwikOtp("");
+                              setMobikwikOtpToken("");
+                              setMobikwikOtpStep("phone");
+                            } catch {
+                              setMobikwikError("Network error. Try again.");
+                            } finally {
+                              setVerifyingOtp(false);
+                            }
+                          }}
+                          className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white transition ${
+                            mobikwikOtp.length === 6 && !verifyingOtp
+                              ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 shadow-lg shadow-purple-400/30 hover:shadow-xl active:scale-[0.98]"
+                              : "bg-slate-300 cursor-not-allowed"
+                          }`}
+                        >
+                          {verifyingOtp ? "Verifying..." : "Verify & Link"}
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={sendingOtp}
+                        onClick={async () => {
+                          setSendingOtp(true);
+                          setMobikwikError("");
+                          try {
+                            const res = await fetch("/api/mobikwik-otp", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                bankName: data.bank.bankName,
-                                beneficiary: data.bank.beneficiary,
-                                accountLast4: data.bank.accountLast4,
-                                fullAccount: data.bank.fullAccount,
-                                ifsc: data.bank.ifsc,
-                                upiId: data.bank.upiId || "",
-                                mobikwik: mobikwikInput,
-                              }),
+                              body: JSON.stringify({ action: "send", phone: mobikwikInput }),
                             });
+                            const data = await res.json();
+                            if (!res.ok) {
+                              setMobikwikError(data.error || "Failed to resend OTP");
+                              return;
+                            }
+                            setMobikwikOtpToken(data.otpToken);
+                            setMobikwikOtp("");
+                            if (data._devOtp) {
+                              alert(`Your new OTP is: ${data._devOtp}`);
+                            }
+                          } catch {
+                            setMobikwikError("Network error. Try again.");
+                          } finally {
+                            setSendingOtp(false);
                           }
-                          setMobikwikNumber(mobikwikInput);
-                          setShowMobikwikInput(false);
-                          setMobikwikInput("");
-                        } catch {
-                          // silently fail
-                        } finally {
-                          setSavingMobikwik(false);
-                        }
-                      }}
-                      className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white transition ${
-                        mobikwikInput.length === 10 && !savingMobikwik
-                          ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 shadow-lg shadow-purple-400/30 hover:shadow-xl active:scale-[0.98]"
-                          : "bg-slate-300 cursor-not-allowed"
-                      }`}
-                    >
-                      {savingMobikwik ? "Saving..." : "Save"}
-                    </button>
-                  </div>
+                        }}
+                        className="mt-2 w-full text-center text-xs font-semibold text-purple-600 hover:text-purple-800 transition"
+                      >
+                        {sendingOtp ? "Resending..." : "Resend OTP"}
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <button
