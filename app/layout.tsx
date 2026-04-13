@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   title: "GMTPay",
   description: "GMTPay - Payment Platform",
   icons: {
-    icon: "/gmtpayicon.jpeg",
-    shortcut: "/gmtpayicon.jpeg",
-    apple: "/gmtpayicon.jpeg",
+    icon: "/gmtpayicon.png",
+    shortcut: "/gmtpayicon.png",
+    apple: "/gmtpayicon.png",
   },
 };
 

@@ -18,7 +18,7 @@ export function BrandLogo({
   return (
     <div className={`flex items-center gap-3 ${className}`.trim()}>
       <Image
-        src="/gmtpayicon.jpeg"
+        src="/gmtpayicon.png"
         alt="GMTPay logo"
         width={size}
         height={size}
