@@ -1,0 +1,241 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Users ──────────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(cuid())
+  uid       String?  @unique
+  referralCode String? @unique
+  phone     String?  @unique
+  email     String?  @unique
+  password  String
+  name      String   @default("")
+  role      Role     @default(USER)
+  balance   Float    @default(0)
+  referredById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  referredBy User? @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals  User[] @relation("UserReferrals")
+  bankAccount BankAccount?
+  sellerFund  SellerFund?
+  buyOrders   BuyOrder[]
+  sellTx      SellTransaction[]
+  checkIns    DailyCheckIn[]
+  jackpotWins JackpotWin[]
+  commissionsEarned ReferralCommission[] @relation("ReferrerCommissions")
+  commissionsGiven  ReferralCommission[] @relation("FromUserCommissions")
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// ─── Bank Accounts ──────────────────────────────────────────────────
+model BankAccount {
+  id           String @id @default(cuid())
+  userId       String @unique
+  bankName     String
+  beneficiary  String
+  accountLast4 String
+  fullAccount  String
+  ifsc         String
+  upiId        String @default("")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bank_accounts")
+}
+
+// ─── Seller Funds (Auto-Sell Pool) ──────────────────────────────────
+model SellerFund {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  totalFund      Float   @default(0)
+  autoSellActive Boolean @default(false)
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offers BuyOffer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("seller_funds")
+}
+
+// ─── Buy Offers (Generated from Seller Funds) ───────────────────────
+model BuyOffer {
+  id           String      @id @default(cuid())
+  sellerFundId String
+  amount       Float
+  bank         String
+  upiId        String
+  accountName  String
+  accountNumber String
+  ifsc         String
+  status       OfferStatus @default(AVAILABLE)
+
+  sellerFund SellerFund       @relation(fields: [sellerFundId], references: [id], onDelete: Cascade)
+  buyOrder   BuyOrder?
+  sellTx     SellTransaction?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("buy_offers")
+}
+
+enum OfferStatus {
+  AVAILABLE
+  LOCKED
+  SOLD
+}
+
+// ─── Buy Orders (Buyer's purchase) ─────────────────────────────────
+model BuyOrder {
+  id          String         @id @default(cuid())
+  orderNo     String         @unique
+  buyerId     String
+  offerId     String?        @unique
+  amount      Float
+  utrNumber   String         @default("")
+  receiptUrl  String         @default("")
+  currency    String         @default("INR")
+  status      BuyOrderStatus @default(PENDING)
+
+  buyer User      @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  offer BuyOffer? @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("buy_orders")
+}
+
+enum BuyOrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+// ─── Sell Transactions (Seller sees when buyer buys) ────────────────
+model SellTransaction {
+  id         String       @id @default(cuid())
+  sellerId   String
+  offerId    String       @unique
+  amount     Float
+  buyerUtr   String       @default("")
+  bank       String
+  upiId      String
+  status     SellTxStatus @default(PENDING)
+  orderNo    String       @unique
+  orderTime  String
+
+  seller User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  offer  BuyOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sell_transactions")
+}
+
+enum SellTxStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// ─── Home Banners ───────────────────────────────────────────────────
+model Banner {
+  id       String  @id @default(cuid())
+  imageUrl String
+  sortOrder Int    @default(0)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("banners")
+}
+
+// ─── Daily Check-In ─────────────────────────────────────────────────
+model DailyCheckIn {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float    @default(5)
+  date      String   // YYYY-MM-DD format, one per user per day
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+  @@map("daily_check_ins")
+}
+
+// ─── Jackpot Wins ───────────────────────────────────────────────────
+model JackpotWin {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("jackpot_wins")
+}
+
+// ─── Referral Commissions ───────────────────────────────────────────
+model ReferralCommission {
+  id               String @id @default(cuid())
+  referrerId       String
+  fromUserId       String
+  orderId          String
+  depositAmount    Float
+  commissionRate   Float  @default(0.005)
+  commissionAmount Float
+
+  referrer User @relation("ReferrerCommissions", fields: [referrerId], references: [id], onDelete: Cascade)
+  fromUser User @relation("FromUserCommissions", fields: [fromUserId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("referral_commissions")
+}
+
+// ─── Referral Commissions ───────────────────────────────────────────
+model ReferralCommission {
+  id               String @id @default(cuid())
+  referrerId       String
+  fromUserId       String
+  orderId          String
+  depositAmount    Float
+  commissionRate   Float  @default(0.005)
+  commissionAmount Float
+
+  referrer User @relation("ReferrerCommissions", fields: [referrerId], references: [id], onDelete: Cascade)
+  fromUser User @relation("FromUserCommissions", fields: [fromUserId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("referral_commissions")
+}
