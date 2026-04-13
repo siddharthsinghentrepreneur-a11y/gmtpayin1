@@ -2,9 +2,9 @@
 
 import { BrandLogo } from "@/components/brand-logo";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAdminPhone, saveAdminSession, saveUserSession } from "@/lib/client-auth";
+import { getUserSession, isAdminPhone, saveAdminSession, saveUserSession } from "@/lib/client-auth";
 
 export default function Home() {
   const router = useRouter();
@@ -13,6 +13,29 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // If user is already logged in, redirect to dashboard
+  useEffect(() => {
+    const session = getUserSession();
+    if (session) {
+      if (isAdminPhone(session.phone)) {
+        router.replace("/admin/dashboard");
+      } else {
+        router.replace("/dashboard");
+      }
+    } else {
+      setCheckingSession(false);
+    }
+  }, [router]);
+
+  if (checkingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-600 via-blue-600 to-blue-700">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-white border-t-transparent" />
+      </div>
+    );
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
