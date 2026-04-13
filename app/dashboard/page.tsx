@@ -2,7 +2,6 @@
 
 import { BrandLogo } from "@/components/brand-logo";
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { GiPayMoney, GiReceiveMoney } from "react-icons/gi";
 import { IoIosCard } from "react-icons/io";
 import { AiFillHome } from "react-icons/ai";
@@ -249,12 +248,10 @@ export default function DashboardPage() {
           >
             {slides.map((slide, i) => (
               <div key={i} className="relative aspect-[16/5] w-full shrink-0">
-                <Image
+                <img
                   src={slide.src}
                   alt={`Banner ${i + 1}`}
-                  fill
-                  className="object-cover"
-                  priority={i === 0}
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               </div>
             ))}
