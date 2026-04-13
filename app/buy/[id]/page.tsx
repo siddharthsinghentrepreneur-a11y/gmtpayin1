@@ -114,7 +114,10 @@ export default function BuyDetailPage() {
                     setRemainingSeconds(remaining);
                   }
                 } else {
-                  console.error("Lock failed:", await lockRes.text());
+                  const lockErr = await lockRes.json().catch(() => ({}));
+                  alert(lockErr.error || "This offer is no longer available.");
+                  router.replace("/buy");
+                  return;
                 }
               } catch (err) {
                 console.error("Lock network error:", err);

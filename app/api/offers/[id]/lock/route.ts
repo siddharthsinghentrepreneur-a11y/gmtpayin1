@@ -52,7 +52,7 @@ export async function POST(
 
     if (offer.status !== "AVAILABLE") {
       return Response.json(
-        { error: "Offer is no longer available" },
+        { error: "This offer has been taken by another user. Please try another offer." },
         { status: 409 }
       );
     }
