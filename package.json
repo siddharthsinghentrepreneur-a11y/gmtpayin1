@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && curl -so aws-rds-global-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem",
     "db:check": "npx tsx scripts/db-check.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
