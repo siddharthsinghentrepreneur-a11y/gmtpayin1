@@ -6,7 +6,7 @@ import { GiPayMoney, GiReceiveMoney } from "react-icons/gi";
 import { IoIosCard } from "react-icons/io";
 import { AiFillHome } from "react-icons/ai";
 import { RiReceiptFill, RiTeamFill } from "react-icons/ri";
-import { MdLeaderboard } from "react-icons/md";
+import { MdLeaderboard, MdAccountBalanceWallet } from "react-icons/md";
 import { IoPerson } from "react-icons/io5";
 import { HiOutlineMail } from "react-icons/hi";
 import { FiChevronRight, FiX } from "react-icons/fi";
@@ -31,6 +31,10 @@ export default function DashboardPage() {
   const [current, setCurrent] = useState(0);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [linkedBank, setLinkedBank] = useState<LinkedBankAccount | null>(null);
+  const [mobikwikNumber, setMobikwikNumber] = useState("");
+  const [mobikwikInput, setMobikwikInput] = useState("");
+  const [showMobikwikInput, setShowMobikwikInput] = useState(false);
+  const [savingMobikwik, setSavingMobikwik] = useState(false);
   const [userUid, setUserUid] = useState("-----");
   const [balance, setBalance] = useState(0);
   const [todayBuy, setTodayBuy] = useState({ inTransaction: 0, success: 0 });
@@ -148,6 +152,10 @@ export default function DashboardPage() {
                 ifsc: data.bank.ifsc,
               });
               syncLinkedBank();
+            }
+            // Load MobiKwik number from DB
+            if (data.bank.mobikwik) {
+              setMobikwikNumber(data.bank.mobikwik);
             }
           } else {
             // DB empty or incomplete — clear old localStorage too
@@ -448,6 +456,111 @@ export default function DashboardPage() {
                 <FiChevronRight className="h-5 w-5 text-zinc-400" />
               </button>
             )}
+
+            {/* MobiKwik Wallet Section */}
+            <div className="mt-4">
+              {mobikwikNumber ? (
+                <div className="overflow-hidden rounded-2xl border border-purple-100 bg-gradient-to-r from-purple-50/90 to-fuchsia-50/80 p-4 shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white shadow-lg shadow-purple-300/30">
+                      <MdAccountBalanceWallet className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[15px] font-bold text-slate-900">MobiKwik Linked</p>
+                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">
+                          Active
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm font-semibold text-slate-800">{mobikwikNumber}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : showMobikwikInput ? (
+                <div className="rounded-2xl border border-purple-100 bg-gradient-to-r from-purple-50/80 to-fuchsia-50/80 p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white shadow-md shadow-purple-300/30">
+                      <MdAccountBalanceWallet className="h-5 w-5" />
+                    </div>
+                    <p className="text-[15px] font-bold text-slate-900">Link MobiKwik Wallet</p>
+                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={mobikwikInput}
+                    onChange={(e) => setMobikwikInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="Enter MobiKwik number"
+                    className="w-full rounded-xl border border-purple-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition placeholder:text-zinc-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 font-mono tracking-wide"
+                  />
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setShowMobikwikInput(false); setMobikwikInput(""); }}
+                      className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={mobikwikInput.length !== 10 || savingMobikwik}
+                      onClick={async () => {
+                        const userId = getCurrentUserId();
+                        if (!userId || mobikwikInput.length !== 10) return;
+                        setSavingMobikwik(true);
+                        try {
+                          const res = await fetch(`/api/users/${userId}/bank`);
+                          const data = await res.json();
+                          if (data.bank) {
+                            await fetch(`/api/users/${userId}/bank`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                bankName: data.bank.bankName,
+                                beneficiary: data.bank.beneficiary,
+                                accountLast4: data.bank.accountLast4,
+                                fullAccount: data.bank.fullAccount,
+                                ifsc: data.bank.ifsc,
+                                upiId: data.bank.upiId || "",
+                                mobikwik: mobikwikInput,
+                              }),
+                            });
+                          }
+                          setMobikwikNumber(mobikwikInput);
+                          setShowMobikwikInput(false);
+                          setMobikwikInput("");
+                        } catch {
+                          // silently fail
+                        } finally {
+                          setSavingMobikwik(false);
+                        }
+                      }}
+                      className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white transition ${
+                        mobikwikInput.length === 10 && !savingMobikwik
+                          ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 shadow-lg shadow-purple-400/30 hover:shadow-xl active:scale-[0.98]"
+                          : "bg-slate-300 cursor-not-allowed"
+                      }`}
+                    >
+                      {savingMobikwik ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowMobikwikInput(true)}
+                  className="flex w-full items-center gap-4 rounded-2xl border border-purple-100 bg-gradient-to-r from-purple-50/80 to-fuchsia-50/80 p-4 text-left transition hover:shadow-md hover:border-purple-200 active:scale-[0.98]"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white shadow-lg shadow-purple-300/40">
+                    <MdAccountBalanceWallet className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[15px] font-bold text-slate-900">Link MobiKwik</p>
+                    <p className="mt-0.5 text-xs text-zinc-500">Add your MobiKwik wallet for withdrawals</p>
+                  </div>
+                  <FiChevronRight className="h-5 w-5 text-zinc-400" />
+                </button>
+              )}
+            </div>
 
             {/* Info Note */}
             <div className="mt-4 rounded-xl bg-amber-50 p-3">

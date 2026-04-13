@@ -27,7 +27,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { bankName, beneficiary, accountLast4, fullAccount, ifsc, upiId } = body;
+    const { bankName, beneficiary, accountLast4, fullAccount, ifsc, upiId, mobikwik } = body;
 
     if (!bankName || !beneficiary || !accountLast4 || !fullAccount || !ifsc) {
       return Response.json(
@@ -44,7 +44,7 @@ export async function POST(
 
     const bank = await prisma.bankAccount.upsert({
       where: { userId: id },
-      update: { bankName, beneficiary, accountLast4, fullAccount, ifsc, upiId: upiId || "" },
+      update: { bankName, beneficiary, accountLast4, fullAccount, ifsc, upiId: upiId || "", mobikwik: mobikwik || "" },
       create: {
         userId: id,
         bankName,
@@ -53,6 +53,7 @@ export async function POST(
         fullAccount,
         ifsc,
         upiId: upiId || "",
+        mobikwik: mobikwik || "",
       },
     });
 

@@ -54,6 +54,7 @@ model BankAccount {
   fullAccount  String
   ifsc         String
   upiId        String @default("")
+  mobikwik     String @default("")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
