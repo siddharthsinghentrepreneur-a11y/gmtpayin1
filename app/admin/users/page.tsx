@@ -51,7 +51,7 @@ interface User {
   recentOrders: UserOrder[];
 }
 
-const FILTERS = ["All", "Active", "Blocked"] as const;
+const FILTERS = ["All", "Active", "Blocked", "Featured"] as const;
 const RISK_FILTERS = ["All Risk", "Low", "Medium", "High"] as const;
 
 const ORDER_STATUS_STYLES: Record<string, { bg: string; dot: string }> = {
@@ -99,7 +99,7 @@ export default function AdminUsersPage() {
   const filtered = users
     .filter((u) => {
       const matchesSearch = u.uid.includes(search) || u.phone.includes(search);
-      const matchesFilter = filter === "All" || u.status === filter;
+      const matchesFilter = filter === "All" || filter === "Featured" ? (filter === "Featured" ? u.featuredSeller : true) : u.status === filter;
       const matchesRisk = riskFilter === "All Risk" || u.riskLevel === riskFilter;
       return matchesSearch && matchesFilter && matchesRisk;
     })
@@ -111,6 +111,7 @@ export default function AdminUsersPage() {
 
   const activeCount = users.filter((u) => u.status === "Active").length;
   const blockedCount = users.filter((u) => u.status === "Blocked").length;
+  const featuredCount = users.filter((u) => u.featuredSeller).length;
   const highRiskCount = users.filter((u) => u.riskLevel === "High").length;
   const totalBalance = users.reduce((s, u) => s + u.balance, 0);
 
@@ -220,7 +221,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100">
@@ -265,6 +266,17 @@ export default function AdminUsersPage() {
             </div>
           </div>
         </div>
+        <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 shadow-sm cursor-pointer hover:bg-amber-50 transition" onClick={() => setFilter("Featured")}>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+              <MdStar className="h-4 w-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Featured Sellers</p>
+              <p className="text-lg font-extrabold text-amber-700">{featuredCount}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters Row */}
@@ -290,7 +302,7 @@ export default function AdminUsersPage() {
                   : "text-slate-500 hover:bg-slate-50"
               }`}
             >
-              {f} {f === "All" ? `(${users.length})` : f === "Active" ? `(${activeCount})` : `(${blockedCount})`}
+              {f} {f === "All" ? `(${users.length})` : f === "Active" ? `(${activeCount})` : f === "Blocked" ? `(${blockedCount})` : `(${featuredCount})`}
             </button>
           ))}
         </div>
@@ -450,6 +462,14 @@ export default function AdminUsersPage() {
                                 className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
                               >
                                 <MdEdit className="h-4 w-4" /> Edit Balance
+                              </button>
+                              <button
+                                onClick={() => { toggleFeaturedSeller(user.id, user.featuredSeller); setOpenMenu(null); }}
+                                className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium hover:bg-slate-50 transition ${
+                                  user.featuredSeller ? "text-amber-600" : "text-slate-700"
+                                }`}
+                              >
+                                {user.featuredSeller ? <><MdStar className="h-4 w-4" /> Remove Featured</> : <><MdStarBorder className="h-4 w-4" /> Make Featured</>}
                               </button>
                               <button
                                 onClick={() => toggleUserStatus(user.uid)}
