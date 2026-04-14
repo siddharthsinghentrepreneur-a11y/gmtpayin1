@@ -21,6 +21,7 @@ model User {
   name      String   @default("")
   role      Role     @default(USER)
   balance   Float    @default(0)
+  featuredSeller Boolean @default(false)
   referredById String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

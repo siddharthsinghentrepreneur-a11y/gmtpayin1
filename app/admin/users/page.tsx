@@ -19,6 +19,8 @@ import {
   MdCurrencyRupee,
   MdArrowUpward,
   MdArrowDownward,
+  MdStar,
+  MdStarBorder,
 } from "react-icons/md";
 
 /* ─── Types ─── */
@@ -45,6 +47,7 @@ interface User {
   lastActive: string;
   upiCount: number;
   riskLevel: "Low" | "Medium" | "High";
+  featuredSeller: boolean;
   recentOrders: UserOrder[];
 }
 
@@ -81,6 +84,7 @@ export default function AdminUsersPage() {
   const [newBalance, setNewBalance] = useState("");
   const [confirmAction, setConfirmAction] = useState<{ orderId: string; action: "approve" | "reject" } | null>(null);
   const [copiedUid, setCopiedUid] = useState<string | null>(null);
+  const [togglingFeatured, setTogglingFeatured] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/users")
@@ -125,6 +129,26 @@ export default function AdminUsersPage() {
       )
     );
     setOpenMenu(null);
+  }
+
+  async function toggleFeaturedSeller(userId: string, current: boolean) {
+    setTogglingFeatured(userId);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, featuredSeller: !current }),
+      });
+      if (res.ok) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, featuredSeller: !current } : u))
+        );
+        if (selectedUser?.id === userId) {
+          setSelectedUser({ ...selectedUser, featuredSeller: !current });
+        }
+      }
+    } catch { /* ignore */ }
+    setTogglingFeatured(null);
   }
 
   function openUserDetail(user: User) {
@@ -331,6 +355,11 @@ export default function AdminUsersPage() {
                           <div>
                             <div className="flex items-center gap-1.5">
                               <p className="font-semibold text-slate-800">{user.phone}</p>
+                              {user.featuredSeller && (
+                                <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-600 px-1.5 py-0.5 text-[9px] font-bold">
+                                  <MdStar className="h-2.5 w-2.5" /> Featured
+                                </span>
+                              )}
                               <span
                                 className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
                                   user.status === "Active" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
@@ -640,6 +669,17 @@ export default function AdminUsersPage() {
               <div>
                 <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-400">Quick Actions</h4>
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => toggleFeaturedSeller(selectedUser.id, selectedUser.featuredSeller)}
+                    disabled={togglingFeatured === selectedUser.id}
+                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition ${
+                      selectedUser.featuredSeller
+                        ? "border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    } ${togglingFeatured === selectedUser.id ? "opacity-50" : ""}`}
+                  >
+                    {selectedUser.featuredSeller ? <><MdStar className="h-4 w-4" /> Featured Seller</> : <><MdStarBorder className="h-4 w-4" /> Make Featured</>}
+                  </button>
                   <button
                     onClick={() => {
                       toggleUserStatus(selectedUser.uid);

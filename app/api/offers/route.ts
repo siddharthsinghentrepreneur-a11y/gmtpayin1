@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
           autoSellActive: true,
           user: {
             balance: { gte: 100 },
+            featuredSeller: true,
             ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
           },
         },

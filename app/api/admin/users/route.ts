@@ -1,4 +1,5 @@
 import { isDatabaseUnavailableError, withDatabaseRetry } from "@/lib/db";
+import { type NextRequest } from "next/server";
 
 // GET /api/admin/users — list all users with stats
 export async function GET() {
@@ -82,6 +83,7 @@ export async function GET() {
           lastActive,
           upiCount: safeUser.bankAccount ? 1 : 0,
           riskLevel,
+          featuredSeller: safeUser.featuredSeller,
           recentOrders,
         };
       });
@@ -93,6 +95,34 @@ export async function GET() {
       return Response.json({ error: "Database unreachable" }, { status: 503 });
     }
     console.error("Admin users error:", error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// PATCH /api/admin/users — toggle featuredSeller
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { userId, featuredSeller } = body as { userId: string; featuredSeller: boolean };
+
+    if (!userId || typeof featuredSeller !== "boolean") {
+      return Response.json({ error: "userId and featuredSeller required" }, { status: 400 });
+    }
+
+    const updated = await withDatabaseRetry(async (db) => {
+      return db.user.update({
+        where: { id: userId },
+        data: { featuredSeller },
+        select: { id: true, featuredSeller: true },
+      });
+    });
+
+    return Response.json({ success: true, user: updated });
+  } catch (error) {
+    if (isDatabaseUnavailableError(error)) {
+      return Response.json({ error: "Database unreachable" }, { status: 503 });
+    }
+    console.error("Admin toggle featured error:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
