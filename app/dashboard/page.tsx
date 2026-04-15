@@ -384,14 +384,7 @@ export default function DashboardPage() {
               </div>
               <span className="text-3xl">🥳</span>
             </Link>
-            <hr className="border-zinc-50" />
-            <div className="flex items-center justify-between px-4 py-3.5">
-              <div>
-                <p className="text-sm font-bold text-slate-900">Newbie Rewards</p>
-                <p className="mt-0.5 text-xs text-zinc-500">Complete tasks &amp; earn bonus</p>
-              </div>
-              <span className="text-3xl">🎁</span>
-            </div>
+
           </div>
         </div>
       </div>

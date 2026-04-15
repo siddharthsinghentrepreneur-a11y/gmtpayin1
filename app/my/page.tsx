@@ -7,9 +7,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AiFillHome } from "react-icons/ai";
 import { RiReceiptFill, RiTeamFill, RiCustomerService2Fill } from "react-icons/ri";
-import { MdLeaderboard, MdOutlineInbox } from "react-icons/md";
+import { MdLeaderboard } from "react-icons/md";
 import { IoPerson, IoCopyOutline, IoClose } from "react-icons/io5";
-import { FiChevronRight, FiDownload } from "react-icons/fi";
+import { FiChevronRight } from "react-icons/fi";
 import { BiLogOut } from "react-icons/bi";
 import { FaTelegramPlane } from "react-icons/fa";
 import { BsCurrencyRupee } from "react-icons/bs";
@@ -188,8 +188,6 @@ export default function MyPage() {
           <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
             {[
               { label: "Service", icon: <RiCustomerService2Fill className="h-5 w-5" />, color: "text-violet-500", bgIcon: "bg-violet-50", action: () => setShowService(true) },
-              { label: "Inbox", icon: <MdOutlineInbox className="h-5 w-5" />, color: "text-sky-500", bgIcon: "bg-sky-50", badge: 3 },
-              { label: "Download APK", icon: <FiDownload className="h-5 w-5" />, color: "text-emerald-500", bgIcon: "bg-emerald-50" },
             ].map((item, i, arr) => (
               <button
                 key={item.label}
@@ -208,11 +206,6 @@ export default function MyPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.badge ? (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                      {item.badge}
-                    </span>
-                  ) : null}
                   <FiChevronRight className="h-4 w-4 text-zinc-300" />
                 </div>
               </button>
@@ -296,7 +289,7 @@ export default function MyPage() {
                 </div>
               </div>
               <a
-                href="https://t.me/gmtpay_official"
+                href="https://t.me/+Ayj_YlsuXhFjNGE1"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-gradient-to-r from-[#2AABEE] to-[#229ED9] px-5 py-2 text-sm font-bold text-white shadow-md transition hover:shadow-lg hover:brightness-110"
