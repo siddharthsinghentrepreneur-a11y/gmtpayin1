@@ -9,6 +9,7 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
         include: {
           bankAccount: true,
+          _count: { select: { referrals: true } },
           buyOrders: {
             select: { id: true, amount: true, status: true, createdAt: true, utrNumber: true },
             orderBy: { createdAt: "desc" },
@@ -85,6 +86,7 @@ export async function GET() {
           riskLevel,
           featuredSeller: safeUser.featuredSeller,
           role: safeUser.role,
+          referralCount: user._count.referrals,
           recentOrders,
         };
       });

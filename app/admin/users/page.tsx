@@ -49,6 +49,7 @@ interface User {
   riskLevel: "Low" | "Medium" | "High";
   featuredSeller: boolean;
   role: "USER" | "ADMIN";
+  referralCount: number;
   recentOrders: UserOrder[];
 }
 
@@ -360,7 +361,7 @@ export default function AdminUsersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80">
-                {["User", "Balance", "Deposit / Withdraw", "Orders", "Success %", "Risk", "Last Active", ""].map((h) => (
+                {["User", "Balance", "Deposit / Withdraw", "Orders", "Referrals", "Success %", "Risk", "Last Active", ""].map((h) => (
                   <th key={h} className={`px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 ${h === "" ? "text-right" : "text-left"}`}>
                     {h}
                   </th>
@@ -370,7 +371,7 @@ export default function AdminUsersPage() {
             <tbody className="divide-y divide-slate-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-sm text-slate-400">
                     No users found
                   </td>
                 </tr>
@@ -442,6 +443,11 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3.5 font-semibold text-slate-700">
                         {user.orders}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-600">
+                          {user.referralCount}
+                        </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3.5">
                         <div className="flex items-center gap-2">

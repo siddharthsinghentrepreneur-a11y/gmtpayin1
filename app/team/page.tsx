@@ -9,6 +9,16 @@ import { IoPerson, IoCopyOutline } from "react-icons/io5";
 import { FaTelegramPlane, FaWhatsapp, FaFacebookF, FaInstagram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { getCurrentUserId } from "@/lib/client-auth";
+import { HiUsers } from "react-icons/hi2";
+
+interface TeamMember {
+  id: string;
+  uid: string;
+  phoneLast4: string;
+  commission: number;
+  joinedAt: string;
+  isToday: boolean;
+}
 
 export default function TeamPage() {
   const [balance, setBalance] = useState(0);
@@ -20,6 +30,8 @@ export default function TeamPage() {
     todayCommission: 0,
     commissionRate: 0.5,
   });
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [memberFilter, setMemberFilter] = useState<"all" | "today">("all");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -34,7 +46,12 @@ export default function TeamPage() {
       .catch(() => {});
     fetch(`/api/team?userId=${userId}`)
       .then((r) => r.json())
-      .then((data) => { if (!data.error) setTeamData(data); })
+      .then((data) => {
+        if (!data.error) {
+          setTeamData(data);
+          if (data.members) setMembers(data.members);
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -211,6 +228,65 @@ export default function TeamPage() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ── Team Members List ── */}
+        <div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+              Team Members
+            </h2>
+            <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-white p-0.5">
+              <button
+                type="button"
+                onClick={() => setMemberFilter("all")}
+                className={`rounded-md px-3 py-1 text-[11px] font-bold transition ${
+                  memberFilter === "all" ? "bg-indigo-600 text-white" : "text-zinc-500 hover:bg-zinc-50"
+                }`}
+              >
+                All ({teamData.teamCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setMemberFilter("today")}
+                className={`rounded-md px-3 py-1 text-[11px] font-bold transition ${
+                  memberFilter === "today" ? "bg-indigo-600 text-white" : "text-zinc-500 hover:bg-zinc-50"
+                }`}
+              >
+                Today ({teamData.todayMembers})
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 space-y-2">
+            {(memberFilter === "today" ? members.filter((m) => m.isToday) : members).length === 0 ? (
+              <div className="flex flex-col items-center gap-2 rounded-2xl bg-white py-8 shadow-sm">
+                <HiUsers className="h-8 w-8 text-zinc-300" />
+                <p className="text-sm text-zinc-400">
+                  {memberFilter === "today" ? "No new members today" : "No team members yet"}
+                </p>
+              </div>
+            ) : (
+              (memberFilter === "today" ? members.filter((m) => m.isToday) : members).map((m) => (
+                <div key={m.id} className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-bold text-white shadow">
+                      {m.phoneLast4}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">****{m.phoneLast4}</p>
+                      <p className="text-[10px] text-indigo-500 font-bold">UID: {m.uid}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-emerald-600">₹{m.commission.toFixed(2)}</p>
+                    <p className="text-[10px] text-zinc-400">
+                      {new Date(m.joinedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
