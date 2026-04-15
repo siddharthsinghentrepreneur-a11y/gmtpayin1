@@ -129,12 +129,12 @@ export default function BuyPage() {
   };
 
   const calculateIncome = (amount: number): string => {
-    const income = amount * 0.03 + 6;
+    const income = amount * 0.04 + 6;
     return `₹${income.toFixed(2)}`;
   };
 
   const calculateBalance = (amount: number): string => {
-    const income = amount * 0.03 + 6;
+    const income = amount * 0.04 + 6;
     const balance = amount + income;
     return `+ ${balance.toFixed(2)}`;
   };
@@ -206,7 +206,7 @@ export default function BuyPage() {
               <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-white/20 blur-xl" />
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-cyan-100">Smart Margin</p>
               <p className="mt-2 text-3xl font-bold leading-tight">
-                3% + 6
+                4% + 6
                 <span className="ml-2 text-base font-medium text-indigo-50">Income per order</span>
               </p>
               <p className="mt-2 text-sm text-indigo-100">Higher ranked merchants are sorted first for faster execution.</p>

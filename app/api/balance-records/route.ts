@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 
       // Each BuyOrder generates 2 balance records:
       // 1. Recharge (principal amount)
-      // 2. Buy Order Rewards (3% + 6)
+      // 2. Buy Order Rewards (4% + 6)
       const entries: {
         id: string;
         title: string;

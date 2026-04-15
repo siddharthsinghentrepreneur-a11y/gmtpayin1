@@ -75,7 +75,7 @@ export async function POST(
         }
       }
 
-      // Add amount + income (3% + 6) to buyer's balance
+      // Add amount + income (4% + 6) to buyer's balance
       const income = calculateDepositIncome(order.amount);
       await tx.user.update({
         where: { id: order.buyerId },

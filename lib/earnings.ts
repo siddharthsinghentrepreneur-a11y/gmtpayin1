@@ -1,5 +1,5 @@
 export function calculateDepositIncome(amount: number) {
-  return amount * 0.03 + 6;
+  return amount * 0.04 + 6;
 }
 
 export function calculateDepositCredit(amount: number) {

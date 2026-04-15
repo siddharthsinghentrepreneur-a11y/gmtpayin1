@@ -128,7 +128,7 @@ export async function GET() {
       ]);
 
       const successRate = totalBuy > 0 ? Math.round((completedBuyOrders / totalBuy) * 100 * 10) / 10 : 0;
-      const commission = (todayRevenue._sum.amount || 0) * 0.03;
+      const commission = (todayRevenue._sum.amount || 0) * 0.04;
 
       // Build recent activity from buy orders, sell transactions, and new users
       type ActivityItem = {
