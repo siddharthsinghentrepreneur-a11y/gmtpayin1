@@ -84,6 +84,7 @@ export async function GET() {
           upiCount: safeUser.bankAccount ? 1 : 0,
           riskLevel,
           featuredSeller: safeUser.featuredSeller,
+          role: safeUser.role,
           recentOrders,
         };
       });
@@ -99,21 +100,30 @@ export async function GET() {
   }
 }
 
-// PATCH /api/admin/users — toggle featuredSeller
+// PATCH /api/admin/users — toggle featuredSeller or role
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, featuredSeller } = body as { userId: string; featuredSeller: boolean };
+    const { userId, featuredSeller, role } = body as { userId: string; featuredSeller?: boolean; role?: string };
 
-    if (!userId || typeof featuredSeller !== "boolean") {
-      return Response.json({ error: "userId and featuredSeller required" }, { status: 400 });
+    if (!userId) {
+      return Response.json({ error: "userId required" }, { status: 400 });
+    }
+
+    // Build update data based on what was provided
+    const data: Record<string, unknown> = {};
+    if (typeof featuredSeller === "boolean") data.featuredSeller = featuredSeller;
+    if (role === "ADMIN" || role === "USER") data.role = role;
+
+    if (Object.keys(data).length === 0) {
+      return Response.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
     const updated = await withDatabaseRetry(async (db) => {
       return db.user.update({
         where: { id: userId },
-        data: { featuredSeller },
-        select: { id: true, featuredSeller: true },
+        data,
+        select: { id: true, featuredSeller: true, role: true },
       });
     });
 

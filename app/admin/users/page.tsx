@@ -48,6 +48,7 @@ interface User {
   upiCount: number;
   riskLevel: "Low" | "Medium" | "High";
   featuredSeller: boolean;
+  role: "USER" | "ADMIN";
   recentOrders: UserOrder[];
 }
 
@@ -85,6 +86,7 @@ export default function AdminUsersPage() {
   const [confirmAction, setConfirmAction] = useState<{ orderId: string; action: "approve" | "reject" } | null>(null);
   const [copiedUid, setCopiedUid] = useState<string | null>(null);
   const [togglingFeatured, setTogglingFeatured] = useState<string | null>(null);
+  const [togglingAdmin, setTogglingAdmin] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/users")
@@ -150,6 +152,27 @@ export default function AdminUsersPage() {
       }
     } catch { /* ignore */ }
     setTogglingFeatured(null);
+  }
+
+  async function toggleAdminRole(userId: string, currentRole: "USER" | "ADMIN") {
+    setTogglingAdmin(userId);
+    try {
+      const newRole = currentRole === "ADMIN" ? "USER" : "ADMIN";
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, role: newRole }),
+      });
+      if (res.ok) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+        );
+        if (selectedUser?.id === userId) {
+          setSelectedUser({ ...selectedUser, role: newRole });
+        }
+      }
+    } catch { /* ignore */ }
+    setTogglingAdmin(null);
   }
 
   function openUserDetail(user: User) {
@@ -367,6 +390,11 @@ export default function AdminUsersPage() {
                           <div>
                             <div className="flex items-center gap-1.5">
                               <p className="font-semibold text-slate-800">{user.phone}</p>
+                              {user.role === "ADMIN" && (
+                                <span className="inline-flex items-center gap-0.5 rounded-full bg-violet-50 text-violet-600 px-1.5 py-0.5 text-[9px] font-bold">
+                                  Admin
+                                </span>
+                              )}
                               {user.featuredSeller && (
                                 <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 text-amber-600 px-1.5 py-0.5 text-[9px] font-bold">
                                   <MdStar className="h-2.5 w-2.5" /> Featured
@@ -470,6 +498,14 @@ export default function AdminUsersPage() {
                                 }`}
                               >
                                 {user.featuredSeller ? <><MdStar className="h-4 w-4" /> Remove Featured</> : <><MdStarBorder className="h-4 w-4" /> Make Featured</>}
+                              </button>
+                              <button
+                                onClick={() => { toggleAdminRole(user.id, user.role); setOpenMenu(null); }}
+                                className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-medium hover:bg-slate-50 transition ${
+                                  user.role === "ADMIN" ? "text-violet-600" : "text-slate-700"
+                                }`}
+                              >
+                                {user.role === "ADMIN" ? <><MdBlock className="h-4 w-4" /> Remove Admin</> : <><MdCheckCircle className="h-4 w-4" /> Make Admin</>}
                               </button>
                               <button
                                 onClick={() => toggleUserStatus(user.uid)}
@@ -715,6 +751,17 @@ export default function AdminUsersPage() {
                     }`}
                   >
                     {selectedUser.status === "Active" ? <><MdBlock className="h-4 w-4" /> Block User</> : <><MdCheckCircle className="h-4 w-4" /> Unblock</>}
+                  </button>
+                  <button
+                    onClick={() => toggleAdminRole(selectedUser.id, selectedUser.role)}
+                    disabled={togglingAdmin === selectedUser.id}
+                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition ${
+                      selectedUser.role === "ADMIN"
+                        ? "border border-violet-300 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    } ${togglingAdmin === selectedUser.id ? "opacity-50" : ""}`}
+                  >
+                    {selectedUser.role === "ADMIN" ? <><MdBlock className="h-4 w-4" /> Remove Admin</> : <><MdCheckCircle className="h-4 w-4" /> Make Admin</>}
                   </button>
                   <button
                     onClick={() => setEditingBalance(true)}

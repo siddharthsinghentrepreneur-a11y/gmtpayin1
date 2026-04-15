@@ -11,6 +11,16 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") || "AVAILABLE";
     const excludeUserId = searchParams.get("excludeUserId");
 
+    // Check if requesting user is admin — admins see ALL offers
+    let isAdmin = false;
+    if (excludeUserId) {
+      const reqUser = await prisma.user.findUnique({
+        where: { id: excludeUserId },
+        select: { role: true },
+      });
+      if (reqUser?.role === "ADMIN") isAdmin = true;
+    }
+
     const offers = await prisma.buyOffer.findMany({
       where: {
         status: status as "AVAILABLE" | "LOCKED" | "SOLD",
@@ -18,8 +28,9 @@ export async function GET(request: NextRequest) {
           autoSellActive: true,
           user: {
             balance: { gte: 100 },
-            featuredSeller: true,
-            ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
+            // Non-admin users only see featured sellers
+            ...(isAdmin ? {} : { featuredSeller: true }),
+            ...(excludeUserId && !isAdmin ? { id: { not: excludeUserId } } : {}),
           },
         },
       },
