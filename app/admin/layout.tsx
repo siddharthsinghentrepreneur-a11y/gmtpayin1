@@ -24,6 +24,7 @@ import {
   MdAccountBalance,
   MdNotifications,
   MdKeyboardArrowRight,
+  MdLeaderboard,
 } from "react-icons/md";
 
 const NAV_ITEMS = [
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { label: "Users", href: "/admin/users", icon: MdPeople, badge: 0 },
   { label: "Buy Orders", href: "/admin/buy-orders", icon: MdReceipt, badge: 3 },
   { label: "Bank Accounts", href: "/admin/upi-accounts", icon: MdAccountBalance, badge: 0 },
+  { label: "Referral Rankings", href: "/admin/referral-rankings", icon: MdLeaderboard, badge: 0 },
   { label: "Banners", href: "/admin/banners", icon: MdImage, badge: 0 },
   { label: "Settings", href: "/admin/settings", icon: MdSettings, badge: 0 },
 ];
@@ -40,6 +42,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   "/admin/users": "Users",
   "/admin/buy-orders": "Buy Orders",
   "/admin/upi-accounts": "Bank Accounts",
+  "/admin/referral-rankings": "Referral Rankings",
   "/admin/banners": "Banners",
   "/admin/settings": "Settings",
 };

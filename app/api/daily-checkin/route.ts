@@ -33,6 +33,22 @@ export async function GET(request: NextRequest) {
       const checkedDates = checkIns.map((c) => c.date);
       const todayChecked = checkedDates.includes(todayStr);
 
+      // Check if user has deposited today
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date(now);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      const todayDeposit = await db.buyOrder.findFirst({
+        where: {
+          buyerId: userId,
+          status: "COMPLETED",
+          createdAt: { gte: todayStart, lte: todayEnd },
+        },
+      });
+
+      const hasDepositToday = Boolean(todayDeposit);
+
       // Build 7-day status (Mon=0 to Sun=6)
       const days = [];
       for (let i = 0; i < 7; i++) {
@@ -54,6 +70,7 @@ export async function GET(request: NextRequest) {
       return {
         days,
         todayChecked,
+        hasDepositToday,
         totalCheckedThisWeek: checkedDates.length,
       };
     });
@@ -87,6 +104,28 @@ export async function POST(request: NextRequest) {
 
       if (existing) {
         return { success: false, message: "Already claimed today" };
+      }
+
+      // Check if user has made a deposit (completed buy order) today
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+
+      const todayDeposit = await db.buyOrder.findFirst({
+        where: {
+          buyerId: userId,
+          status: "COMPLETED",
+          createdAt: { gte: todayStart, lte: todayEnd },
+        },
+      });
+
+      if (!todayDeposit) {
+        return {
+          success: false,
+          message: "You need to make a deposit today to claim the daily reward",
+          requiresDeposit: true,
+        };
       }
 
       // Create check-in and add ₹5 to balance in a transaction

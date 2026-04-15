@@ -24,6 +24,8 @@ export default function RewardsPage() {
   const [balance, setBalance] = useState(0);
   const [drawChances, setDrawChances] = useState(0);
   const [depositAmount, setDepositAmount] = useState(0);
+  const [hasDepositToday, setHasDepositToday] = useState(false);
+  const [claimError, setClaimError] = useState("");
 
   const fetchData = (userId: string) => {
     Promise.all([
@@ -36,6 +38,7 @@ export default function RewardsPage() {
           setDays(checkinData.days);
           setTodayChecked(checkinData.todayChecked);
           setTotalChecked(checkinData.totalCheckedThisWeek);
+          setHasDepositToday(checkinData.hasDepositToday ?? false);
         }
         if (userData.balance !== undefined) setBalance(userData.balance);
         if (jackpotData.drawChances !== undefined) {
@@ -60,6 +63,7 @@ export default function RewardsPage() {
     const userId = getCurrentUserId();
     if (!userId || todayChecked || claiming) return;
     setClaiming(true);
+    setClaimError("");
     try {
       const res = await fetch("/api/daily-checkin", {
         method: "POST",
@@ -75,6 +79,8 @@ export default function RewardsPage() {
         setDays((prev) =>
           prev.map((d) => (d.status === "today" ? { ...d, status: "claimed" as const } : d))
         );
+      } else if (data.requiresDeposit) {
+        setClaimError(data.message);
       }
     } catch {}
     setClaiming(false);
@@ -209,20 +215,40 @@ export default function RewardsPage() {
               })}
             </div>
 
+            {/* Deposit requirement notice */}
+            {!todayChecked && !hasDepositToday && (
+              <div className="mt-4 flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2.5 ring-1 ring-amber-200/60">
+                <span className="text-lg">⚠️</span>
+                <p className="text-[11px] font-medium text-amber-700">
+                  Today deposit required to claim daily reward. <Link href="/buy" className="text-indigo-600 underline">Deposit now</Link>
+                </p>
+              </div>
+            )}
+
+            {/* Error message */}
+            {claimError && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 ring-1 ring-red-200/60">
+                <span className="text-lg">❌</span>
+                <p className="text-[11px] font-medium text-red-600">{claimError}</p>
+              </div>
+            )}
+
             {/* Collect today button */}
             <button
               type="button"
               onClick={handleClaim}
-              disabled={todayChecked || claiming}
+              disabled={todayChecked || claiming || !hasDepositToday}
               className={`mt-5 w-full rounded-2xl py-3 text-sm font-bold text-white shadow-lg transition-all ${
                 todayChecked
                   ? "bg-emerald-500 shadow-emerald-300/40"
                   : claiming
                     ? "bg-orange-300 shadow-orange-200/40"
-                    : "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 shadow-orange-300/40 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                    : !hasDepositToday
+                      ? "bg-zinc-300 shadow-none cursor-not-allowed"
+                      : "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 shadow-orange-300/40 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
               }`}
             >
-              {todayChecked ? "✓ Claimed Today" : claiming ? "Claiming..." : "Collect Today's Reward"}
+              {todayChecked ? "✓ Claimed Today" : claiming ? "Claiming..." : !hasDepositToday ? "Deposit Required to Claim" : "Collect Today's Reward"}
             </button>
           </div>
         </div>
