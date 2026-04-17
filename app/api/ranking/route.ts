@@ -34,8 +34,14 @@ export async function GET(request: NextRequest) {
     const dummyEnabled = dummySetting?.value === "true";
 
     if (dummyEnabled && period !== "all") {
+      // Fetch all real UIDs to avoid collisions
+      const realUsers = await withDatabaseRetry((db) =>
+        db.user.findMany({ select: { uid: true } }),
+      );
+      const realUids = realUsers.map((u) => u.uid).filter(Boolean) as string[];
+
       const dummyPeriod = period as "today" | "yesterday";
-      const dummyLeaderboard = generateDummyRanking(dummyPeriod);
+      const dummyLeaderboard = generateDummyRanking(dummyPeriod, realUids);
 
       return Response.json({
         period,

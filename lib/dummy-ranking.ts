@@ -24,10 +24,17 @@ function dateSeed(date: Date) {
   return y * 10000 + m * 100 + d;
 }
 
-function generateUid(rng: () => number): string {
-  const prefix = String.fromCharCode(65 + Math.floor(rng() * 26)); // A-Z
-  const digits = Math.floor(rng() * 900000 + 100000); // 100000–999999
-  return `${prefix}${digits}`;
+function generateUid(rng: () => number, excludeUids: Set<string>): string {
+  // Generate 5-digit numeric UIDs (10000–99999) like real users
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const uid = String(Math.floor(rng() * 90000 + 10000)); // 10000–99999
+    if (!excludeUids.has(uid)) {
+      excludeUids.add(uid); // prevent duplicates within dummy set too
+      return uid;
+    }
+  }
+  // Fallback: 6-digit to guarantee no collision
+  return String(Math.floor(rng() * 900000 + 100000));
 }
 
 type DummyEntry = {
@@ -37,7 +44,11 @@ type DummyEntry = {
   amount: number;
 };
 
-export function generateDummyRanking(period: "today" | "yesterday"): DummyEntry[] {
+export function generateDummyRanking(
+  period: "today" | "yesterday",
+  realUserUids: string[] = [],
+): DummyEntry[] {
+  const excludeUids = new Set(realUserUids);
   const now = new Date();
   const targetDate = new Date(now);
 
@@ -64,7 +75,7 @@ export function generateDummyRanking(period: "today" | "yesterday"): DummyEntry[
   const entries: DummyEntry[] = [];
 
   for (let i = 0; i < COUNT; i++) {
-    const uid = generateUid(rng);
+    const uid = generateUid(rng, excludeUids);
     const id = `dummy_${seed}_${i}`;
 
     // Base amount range: top users get larger deposits
