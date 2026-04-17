@@ -206,6 +206,15 @@ model JackpotWin {
   @@map("jackpot_wins")
 }
 
+// ─── Site Settings (Key-Value) ──────────────────────────────────────
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
 // ─── Referral Commissions ───────────────────────────────────────────
 model ReferralCommission {
   id               String @id @default(cuid())

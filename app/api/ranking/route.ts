@@ -1,4 +1,5 @@
 import { isDatabaseUnavailableError, withDatabaseRetry } from "@/lib/db";
+import { generateDummyRanking } from "@/lib/dummy-ranking";
 import { type NextRequest } from "next/server";
 
 function getDateRange(period: string) {
@@ -25,6 +26,26 @@ export async function GET(request: NextRequest) {
     const rawPeriod = searchParams.get("period") ?? "all";
     const period = ["today", "yesterday", "all"].includes(rawPeriod) ? rawPeriod : "all";
     const userId = searchParams.get("userId");
+
+    // Check if dummy ranking is enabled
+    const dummySetting = await withDatabaseRetry((db) =>
+      db.siteSetting.findUnique({ where: { key: "dummy_ranking_enabled" } }),
+    );
+    const dummyEnabled = dummySetting?.value === "true";
+
+    if (dummyEnabled && period !== "all") {
+      const dummyPeriod = period as "today" | "yesterday";
+      const dummyLeaderboard = generateDummyRanking(dummyPeriod);
+
+      return Response.json({
+        period,
+        leaderboard: dummyLeaderboard,
+        myEntry: userId
+          ? { rank: null, id: userId, uid: "-----", amount: 0 }
+          : null,
+      });
+    }
+
     const dateRange = getDateRange(period);
 
     const users = await withDatabaseRetry((db) =>

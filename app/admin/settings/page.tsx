@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MdSave,
   MdToggleOn,
@@ -12,6 +12,7 @@ import {
   MdTimer,
   MdSecurity,
   MdNotifications,
+  MdLeaderboard,
 } from "react-icons/md";
 
 /* ─── Types ─── */
@@ -60,6 +61,34 @@ export default function AdminSettingsPage() {
   });
 
   const [saved, setSaved] = useState(false);
+
+  // ─── Dummy Ranking Toggle (persisted in DB) ───
+  const [dummyRanking, setDummyRanking] = useState(false);
+  const [dummyLoading, setDummyLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/admin/settings?key=dummy_ranking_enabled")
+      .then((r) => r.json())
+      .then((d: { value: string | null }) => {
+        setDummyRanking(d.value === "true");
+      })
+      .catch(() => {})
+      .finally(() => setDummyLoading(false));
+  }, []);
+
+  async function toggleDummyRanking() {
+    const next = !dummyRanking;
+    setDummyRanking(next);
+    try {
+      await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "dummy_ranking_enabled", value: String(next) }),
+      });
+    } catch {
+      setDummyRanking(!next); // revert on failure
+    }
+  }
 
   function update<K extends keyof Settings>(key: K, value: Settings[K]) {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -215,6 +244,22 @@ export default function AdminSettingsPage() {
             description="Enable USDT buy/sell on the platform"
             enabled={settings.usdtEnabled}
             onToggle={() => update("usdtEnabled", !settings.usdtEnabled)}
+          />
+        </div>
+      </SettingsSection>
+
+      {/* ─── Ranking Data ─── */}
+      <SettingsSection
+        icon={<MdLeaderboard className="h-5 w-5" />}
+        title="Ranking Data"
+        description="Control whether the ranking page shows real or dummy data"
+      >
+        <div className="space-y-3">
+          <ToggleRow
+            label="Dummy Ranking Data"
+            description={dummyLoading ? "Loading..." : "Show fake leaderboard with 100 random users (auto-refreshes daily, amounts grow throughout the day)"}
+            enabled={dummyRanking}
+            onToggle={toggleDummyRanking}
           />
         </div>
       </SettingsSection>
