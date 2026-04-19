@@ -91,12 +91,21 @@ export function generateDummyRanking(
 
     // Add small per-user jitter so amounts aren't perfectly smooth
     const jitter = 1 + (rng() - 0.5) * 0.08;
+    const raw = currentAmount * jitter;
+
+    // Round to a multiple that varies by amount size
+    const step =
+      raw >= 100000 ? 10000
+      : raw >= 50000 ? 5000
+      : raw >= 20000 ? 1000
+      : raw >= 5000 ? 500
+      : 100;
 
     entries.push({
       rank: 0,
       id,
       uid,
-      amount: Math.round(currentAmount * jitter * 100) / 100,
+      amount: Math.round(raw / step) * step,
     });
   }
 
