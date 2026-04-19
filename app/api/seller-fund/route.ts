@@ -83,10 +83,11 @@ async function generateOffersForFund(
     },
   });
 
-  // Split fund into chunks
+  // Split fund into chunks (only multiples of 100)
+  const usableFund = Math.floor(totalFund / 100) * 100;
   const chunkOptions = [100, 200, 300, 400, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000];
   const amounts: number[] = [];
-  let remaining = totalFund;
+  let remaining = usableFund;
 
   while (remaining >= 100) {
     const validChunks = chunkOptions.filter((c) => c <= remaining);
@@ -94,10 +95,6 @@ async function generateOffersForFund(
     const chunk = validChunks[Math.floor(Math.random() * validChunks.length)];
     amounts.push(chunk);
     remaining -= chunk;
-  }
-
-  if (remaining > 0 && amounts.length > 0) {
-    amounts[amounts.length - 1] += remaining;
   }
 
   // Create offers
