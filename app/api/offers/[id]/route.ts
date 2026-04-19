@@ -14,7 +14,15 @@ export async function GET(
       include: {
         sellerFund: {
           include: {
-            user: { select: { id: true, name: true, bankAccount: { select: { beneficiary: true } } } },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                bankAccount: {
+                  select: { beneficiary: true, bankName: true, fullAccount: true, ifsc: true, upiId: true },
+                },
+              },
+            },
           },
         },
       },
@@ -24,15 +32,16 @@ export async function GET(
       return Response.json({ error: "Offer not found" }, { status: 404 });
     }
 
+    const bank = offer.sellerFund.user.bankAccount;
     const mapped = {
       id: offer.id,
       sellerId: offer.sellerFund.userId,
-      sellerName: offer.sellerFund.user.bankAccount?.beneficiary || offer.accountName,
+      sellerName: bank?.beneficiary || offer.accountName,
       amount: offer.amount,
-      bank: offer.bank,
-      upiId: offer.upiId,
-      accountNumber: offer.accountNumber,
-      ifsc: offer.ifsc,
+      bank: bank?.bankName || offer.bank,
+      upiId: bank?.upiId || offer.upiId,
+      accountNumber: bank?.fullAccount || offer.accountNumber,
+      ifsc: bank?.ifsc || offer.ifsc,
       status: offer.status.toLowerCase(),
       createdAt: offer.createdAt.toISOString(),
     };

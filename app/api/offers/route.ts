@@ -39,26 +39,35 @@ export async function GET(request: NextRequest) {
         sellerFund: {
           include: {
             user: {
-              select: { id: true, name: true, bankAccount: { select: { beneficiary: true } } },
+              select: {
+                id: true,
+                name: true,
+                bankAccount: {
+                  select: { beneficiary: true, bankName: true, fullAccount: true, ifsc: true, upiId: true },
+                },
+              },
             },
           },
         },
       },
     });
 
-    // Map to frontend-friendly shape
-    const mapped = offers.map((o) => ({
-      id: o.id,
-      sellerId: o.sellerFund.userId,
-      sellerName: o.sellerFund.user.bankAccount?.beneficiary || o.accountName,
-      amount: o.amount,
-      bank: o.bank,
-      upiId: o.upiId,
-      accountNumber: o.accountNumber,
-      ifsc: o.ifsc,
-      status: o.status.toLowerCase(),
-      createdAt: o.createdAt.toISOString(),
-    }));
+    // Map to frontend-friendly shape — prefer current bank account over offer snapshot
+    const mapped = offers.map((o) => {
+      const bank = o.sellerFund.user.bankAccount;
+      return {
+        id: o.id,
+        sellerId: o.sellerFund.userId,
+        sellerName: bank?.beneficiary || o.accountName,
+        amount: o.amount,
+        bank: bank?.bankName || o.bank,
+        upiId: bank?.upiId || o.upiId,
+        accountNumber: bank?.fullAccount || o.accountNumber,
+        ifsc: bank?.ifsc || o.ifsc,
+        status: o.status.toLowerCase(),
+        createdAt: o.createdAt.toISOString(),
+      };
+    });
 
     return Response.json({ offers: mapped });
   } catch {

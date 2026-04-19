@@ -20,6 +20,23 @@ export async function GET() {
               accountNumber: true,
               ifsc: true,
               bank: true,
+              sellerFund: {
+                select: {
+                  user: {
+                    select: {
+                      bankAccount: {
+                        select: {
+                          bankName: true,
+                          beneficiary: true,
+                          fullAccount: true,
+                          ifsc: true,
+                          upiId: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -41,6 +58,9 @@ export async function GET() {
 
         const isUsdt = order.currency === "USDT";
 
+        // Prefer current bank account data over offer snapshots
+        const currentBank = order.offer?.sellerFund?.user?.bankAccount;
+
         return {
           id: order.id,
           orderNo: order.orderNo || order.id.slice(0, 12).toUpperCase(),
@@ -53,10 +73,10 @@ export async function GET() {
           time: formatDateTime(order.createdAt),
           utr: order.utrNumber || "",
           receiptUrl: order.receiptUrl || "",
-          payeeName: order.offer?.accountName || order.buyer.name || "—",
-          payeeAccount: order.offer?.accountNumber || "—",
-          ifsc: order.offer?.ifsc || "—",
-          upiId: order.offer?.upiId || "—",
+          payeeName: currentBank?.beneficiary || order.offer?.accountName || order.buyer.name || "—",
+          payeeAccount: currentBank?.fullAccount || order.offer?.accountNumber || "—",
+          ifsc: currentBank?.ifsc || order.offer?.ifsc || "—",
+          upiId: currentBank?.upiId || order.offer?.upiId || "—",
         };
       });
     });
