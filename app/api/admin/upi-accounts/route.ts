@@ -73,6 +73,24 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ error: "Bank account not found" }, { status: 404 });
     }
 
+    // Also update all AVAILABLE offers so buyers see the latest bank details
+    const sellerFund = await withDatabaseRetry((db) =>
+      db.sellerFund.findUnique({ where: { userId: updated.userId } })
+    );
+    if (sellerFund) {
+      await withDatabaseRetry((db) =>
+        db.buyOffer.updateMany({
+          where: { sellerFundId: sellerFund.id, status: "AVAILABLE" },
+          data: {
+            ...(bankName !== undefined && { bank: bankName }),
+            ...(beneficiary !== undefined && { accountName: beneficiary }),
+            ...(fullAccount !== undefined && { accountNumber: fullAccount }),
+            ...(ifsc !== undefined && { ifsc }),
+          },
+        })
+      );
+    }
+
     return Response.json({ success: true, bank: updated });
   } catch (error) {
     if (isDatabaseUnavailableError(error)) {

@@ -57,6 +57,21 @@ export async function POST(
       },
     });
 
+    // Update all AVAILABLE offers so buyers see the latest bank details
+    const sellerFund = await prisma.sellerFund.findUnique({ where: { userId: id } });
+    if (sellerFund) {
+      await prisma.buyOffer.updateMany({
+        where: { sellerFundId: sellerFund.id, status: "AVAILABLE" },
+        data: {
+          bank: bankName,
+          accountName: beneficiary,
+          accountNumber: fullAccount,
+          ifsc,
+          upiId: upiId || "",
+        },
+      });
+    }
+
     return Response.json({ bank });
   } catch {
     return Response.json({ error: "Internal server error" }, { status: 500 });
